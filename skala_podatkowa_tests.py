@@ -38,7 +38,7 @@ class InitialData(BaseTestCase):
         self._test_tax_owed('0')
 
 
-class TestWfirma11205578(BaseTestCase):
+class TestCase1(BaseTestCase):
     def setUp(self) -> None:
         super().setUp()
         self.tax_payer.revenue = Decimal('26433')
@@ -58,7 +58,7 @@ class TestWfirma11205578(BaseTestCase):
         self._test_tax_owed('55.3')
 
 
-class TestWfirma11181897(BaseTestCase):
+class TestCase2(BaseTestCase):
     def setUp(self) -> None:
         super().setUp()
         self.tax_payer.revenue = Decimal('11300')
@@ -79,7 +79,7 @@ class TestWfirma11181897(BaseTestCase):
         self._test_tax_owed('0')
 
 
-class AboveThreshold(BaseTestCase):
+class Test100k(BaseTestCase):
     def setUp(self) -> None:
         super().setUp()
         self.tax_payer.revenue = Decimal('100000')
