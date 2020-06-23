@@ -97,5 +97,27 @@ class Test100k(BaseTestCase):
         self._test_tax_owed('18828.92')
 
 
+class Test150k(BaseTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        self.tax_payer.revenue = Decimal('150000')
+        self.tax_payer.expenses = Decimal('10000')
+        self.tax_payer.tax_reduction = Decimal('1200')
+        self.tax_payer.income_reduction = Decimal('900')
+        self.tax_payer.tax_prepayment = Decimal('60')
+
+    def test_tax_basis(self):
+        self._test_tax_basis('139100')
+
+    def test_tax(self):
+        self._test_tax('31682.80')
+
+    def test_tax_free_amount(self):
+        self._test_tax_free_amount('0')
+
+    def test_tax_owed(self):
+        self._test_tax_owed('30423')
+
+
 if __name__ == '__main__':
     unittest.main()
