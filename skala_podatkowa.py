@@ -75,6 +75,7 @@ class TaxPeriod:
         tax_owed = self.tax()
         tax_owed -= self.tax_reduction
         tax_owed -= self.tax_free_amount()
+        tax_owed -= self.tax_prepayment
         if 0 > tax_owed:
             tax_owed = Decimal('0')
         return tax_owed
