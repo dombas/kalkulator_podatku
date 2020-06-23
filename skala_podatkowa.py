@@ -79,3 +79,6 @@ class TaxPeriod:
         if 0 > tax_owed:
             tax_owed = Decimal('0')
         return tax_owed
+
+    def tax_owed_rounded(self):
+        return round_whole(self.tax_owed())
