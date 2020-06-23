@@ -23,6 +23,10 @@ class BaseTestCase(unittest.TestCase):
         self.assertEqual(Decimal(expected), self.tax_payer.tax_owed(),
                          msg="Błąd wyliczenia zaliczki do zapłaty")
 
+    def _test_tax_owed_rounded(self, expected):
+        self.assertEqual(Decimal(expected), self.tax_payer.tax_owed_rounded(),
+                         msg="Błąd wyliczenia zaokrąglonej zaliczki do zapłaty")
+
 
 class InitialData(BaseTestCase):
     def test_initial_values(self):
@@ -36,6 +40,7 @@ class InitialData(BaseTestCase):
         self._test_tax('0')
         self._test_tax_free_amount('1360')
         self._test_tax_owed('0')
+        self._test_tax_owed_rounded('0')
 
 
 class TestCase1(BaseTestCase):
@@ -56,6 +61,9 @@ class TestCase1(BaseTestCase):
 
     def test_tax_owed(self):
         self._test_tax_owed('55.3')
+
+    def test_tax_owed_rounded(self):
+        self._test_tax_owed_rounded('55')
 
 
 class TestCase2(BaseTestCase):
@@ -78,6 +86,9 @@ class TestCase2(BaseTestCase):
     def test_tax_owed(self):
         self._test_tax_owed('0')
 
+    def test_tax_owed_rounded(self):
+        self._test_tax_owed_rounded('0')
+
 
 class Test100k(BaseTestCase):
     def setUp(self) -> None:
@@ -95,6 +106,9 @@ class Test100k(BaseTestCase):
 
     def test_tax_owed(self):
         self._test_tax_owed('18828.92')
+
+    def test_tax_owed_rounded(self):
+        self._test_tax_owed_rounded('18829')
 
 
 class Test150k(BaseTestCase):
@@ -115,8 +129,8 @@ class Test150k(BaseTestCase):
     def test_tax_free_amount(self):
         self._test_tax_free_amount('0')
 
-    def test_tax_owed(self):
-        self._test_tax_owed('30423')
+    def test_tax_owed_rounded(self):
+        self._test_tax_owed_rounded('30423')
 
 
 if __name__ == '__main__':
