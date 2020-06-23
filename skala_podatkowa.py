@@ -21,7 +21,7 @@ def round_whole(dec):
     return dec.quantize(Decimal('1'))
 
 
-class TaxPayer:
+class TaxPeriod:
     """Calculates tax owed
     https://ksiegowosc.infor.pl/podatki/pit/pit/rozliczenia/3063125,2,PIT-2020-skala-podatkowa-stawki-i-koszty-uzyskania-przychodu.html"""
     TAX_FREE_AMOUNT_THRESHOLDS = list_to_decimal(['8000', '13000', '85528', '127000'])

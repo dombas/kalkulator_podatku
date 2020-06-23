@@ -5,7 +5,7 @@ from decimal import *
 
 class BaseTestCase(unittest.TestCase):
     def setUp(self) -> None:
-        self.tax_payer = skala_podatkowa.TaxPayer()
+        self.tax_payer = skala_podatkowa.TaxPeriod()
 
     def _test_tax_basis(self, expected):
         self.assertEqual(Decimal(expected), self.tax_payer.tax_basis(),
