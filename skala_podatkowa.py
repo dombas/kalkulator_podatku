@@ -1,3 +1,7 @@
+'''
+Author: Dominik Dąbek
+'''
+
 from decimal import *
 
 BEFORE_THRESHOLD_TAX = Decimal('0.17')
