@@ -1,6 +1,6 @@
-'''
+"""
 Author: Dominik Dąbek
-'''
+"""
 
 import unittest
 import skala_podatkowa

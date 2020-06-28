@@ -1,6 +1,6 @@
-'''
+"""
 Author: Dominik Dąbek
-'''
+"""
 
 from tkinter import *
 from skala_podatkowa import TaxPeriod

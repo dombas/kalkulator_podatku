@@ -1,6 +1,6 @@
-'''
+"""
 Author: Dominik Dąbek
-'''
+"""
 
 from decimal import *
 
