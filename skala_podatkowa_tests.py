@@ -19,6 +19,10 @@ class BaseTestCase(unittest.TestCase):
         self.assertEqual(Decimal(expected), self.tax_payer.tax(),
                          msg="Błąd wyliczenia podatku")
 
+    def _test_tax_free_amount_end_of_year(self, expected):
+        self.assertEqual(Decimal(expected), self.tax_payer.tax_free_amount_end_of_year(),
+                         msg="Błąd wyliczenia kwoty zmniejszającej podatek na koniec roku")
+
     def _test_tax_free_amount(self, expected):
         self.assertEqual(Decimal(expected), self.tax_payer.tax_free_amount(),
                          msg="Błąd wyliczenia kwoty zmniejszającej podatek")
@@ -27,9 +31,17 @@ class BaseTestCase(unittest.TestCase):
         self.assertEqual(Decimal(expected), self.tax_payer.tax_owed(),
                          msg="Błąd wyliczenia zaliczki do zapłaty")
 
+    def _test_tax_owed_end_of_year(self, expected):
+        self.assertEqual(Decimal(expected), self.tax_payer.tax_owed_end_of_year(),
+                         msg="Błąd wyliczenia podatku na koniec roku")
+
     def _test_tax_owed_rounded(self, expected):
         self.assertEqual(Decimal(expected), self.tax_payer.tax_owed_rounded(),
                          msg="Błąd wyliczenia zaokrąglonej zaliczki do zapłaty")
+
+    def _test_tax_owed_end_of_year_rounded(self, expected):
+        self.assertEqual(Decimal(expected), self.tax_payer.tax_owed_end_of_year_rounded(),
+                         msg="Błąd wyliczenia zaokrąglonego podatku na koniec roku")
 
 
 class InitialData(BaseTestCase):
@@ -42,8 +54,10 @@ class InitialData(BaseTestCase):
     def test_initial_calculations(self):
         self._test_tax_basis('0')
         self._test_tax('0')
-        self._test_tax_free_amount('1360')
+        self._test_tax_free_amount('525.12')
+        self._test_tax_free_amount_end_of_year('1360')
         self._test_tax_owed('0')
+        self._test_tax_owed_end_of_year('0')
         self._test_tax_owed_rounded('0')
 
 
@@ -61,13 +75,22 @@ class TestCase1(BaseTestCase):
         self._test_tax('1702.72')
 
     def test_tax_free_amount(self):
-        self._test_tax_free_amount('1023.38')
+        self._test_tax_free_amount('525.12')
+
+    def test_tax_free_amount_end_of_year(self):
+        self._test_tax_free_amount_end_of_year('1023.38')
 
     def test_tax_owed(self):
-        self._test_tax_owed('55.3')
+        self._test_tax_owed('553.56')
+
+    def test_tax_owed_end_of_year(self):
+        self._test_tax_owed_end_of_year('55.3')
 
     def test_tax_owed_rounded(self):
-        self._test_tax_owed_rounded('55')
+        self._test_tax_owed_rounded('554')
+
+    def test_tax_owed_end_of_year_rounded(self):
+        self._test_tax_owed_end_of_year_rounded('55')
 
 
 class TestCase2(BaseTestCase):
@@ -85,13 +108,22 @@ class TestCase2(BaseTestCase):
         self._test_tax('1613.98')
 
     def test_tax_free_amount(self):
-        self._test_tax_free_amount('1110.54')
+        self._test_tax_free_amount('525.12')
+
+    def test_tax_free_amount_end_of_year(self):
+        self._test_tax_free_amount_end_of_year('1110.54')
 
     def test_tax_owed(self):
-        self._test_tax_owed('0')
+        self._test_tax_owed('170.04')
+
+    def test_tax_owed_end_of_year(self):
+        self._test_tax_owed_end_of_year('0')
 
     def test_tax_owed_rounded(self):
-        self._test_tax_owed_rounded('0')
+        self._test_tax_owed_rounded('170')
+
+    def test_tax_owed_end_of_year_rounded(self):
+        self._test_tax_owed_end_of_year_rounded('0')
 
 
 class Test100k(BaseTestCase):
@@ -106,13 +138,22 @@ class Test100k(BaseTestCase):
         self._test_tax('19170.80')
 
     def test_tax_free_amount(self):
-        self._test_tax_free_amount('341.88')
+        self._test_tax_free_amount('0')
+
+    def test_tax_free_amount_end_of_year(self):
+        self._test_tax_free_amount_end_of_year('341.88')
 
     def test_tax_owed(self):
-        self._test_tax_owed('18828.92')
+        self._test_tax_owed('19170.80')
+
+    def test_tax_owed_end_of_year(self):
+        self._test_tax_owed_end_of_year('18828.92')
 
     def test_tax_owed_rounded(self):
-        self._test_tax_owed_rounded('18829')
+        self._test_tax_owed_rounded('19171')
+
+    def test_tax_owed_rounded_end_of_year(self):
+        self._test_tax_owed_end_of_year_rounded('18829')
 
 
 class Test150k(BaseTestCase):
@@ -133,8 +174,20 @@ class Test150k(BaseTestCase):
     def test_tax_free_amount(self):
         self._test_tax_free_amount('0')
 
+    def test_tax_free_amount_end_of_year(self):
+        self._test_tax_free_amount_end_of_year('0')
+
+    def test_tax_owed(self):
+        self._test_tax_owed('30422.80')
+
+    def test_tax_owed_end_of_year(self):
+        self._test_tax_owed_end_of_year('30422.80')
+
     def test_tax_owed_rounded(self):
         self._test_tax_owed_rounded('30423')
+
+    def test_tax_owed_rounded_end_of_year(self):
+        self._test_tax_owed_end_of_year_rounded('30423')
 
 
 if __name__ == '__main__':

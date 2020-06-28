@@ -48,6 +48,15 @@ class TaxPeriod:
         tax_free_amount = Decimal('0')
         TAX_FREE_AMOUNT_THRESHOLDS = self.TAX_FREE_AMOUNT_THRESHOLDS
         TAX_FREE_AMOUNT_CONSTANTS = self.TAX_FREE_AMOUNT_CONSTANTS
+        if TAX_FREE_AMOUNT_THRESHOLDS[2] >= tax_basis:
+            tax_free_amount = TAX_FREE_AMOUNT_CONSTANTS[3]
+        return tax_free_amount
+
+    def tax_free_amount_end_of_year(self):
+        tax_basis = round_whole(self.tax_basis())
+        tax_free_amount = Decimal('0')
+        TAX_FREE_AMOUNT_THRESHOLDS = self.TAX_FREE_AMOUNT_THRESHOLDS
+        TAX_FREE_AMOUNT_CONSTANTS = self.TAX_FREE_AMOUNT_CONSTANTS
         if TAX_FREE_AMOUNT_THRESHOLDS[0] >= tax_basis:
             tax_free_amount = TAX_FREE_AMOUNT_CONSTANTS[0]
         elif TAX_FREE_AMOUNT_THRESHOLDS[1] >= tax_basis:
@@ -84,5 +93,18 @@ class TaxPeriod:
             tax_owed = Decimal('0')
         return tax_owed
 
+    def tax_owed_end_of_year(self):
+        tax_owed = self.tax()
+        tax_owed -= self.tax_reduction
+        tax_owed -= self.tax_free_amount_end_of_year()
+        tax_owed -= self.tax_prepayment
+        if 0 > tax_owed:
+            tax_owed = Decimal('0')
+        return tax_owed
+
     def tax_owed_rounded(self):
         return round_whole(self.tax_owed())
+
+    def tax_owed_end_of_year_rounded(self):
+        return round_whole(self.tax_owed_end_of_year())
+        pass
