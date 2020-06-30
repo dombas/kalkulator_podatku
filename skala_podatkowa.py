@@ -4,11 +4,6 @@ Author: Dominik Dąbek
 
 from decimal import *
 
-BEFORE_THRESHOLD_TAX = Decimal('0.17')
-THRESHOLD = Decimal('85528')
-AFTER_THRESHOLD_TAX = Decimal('0.32')
-AFTER_THRESHOLD_CONSTANT = Decimal('14539.76')
-
 
 def list_to_decimal(list_of_str):
     list_of_decimals = []
@@ -28,14 +23,19 @@ def round_whole(dec):
 class TaxPeriod:
     """Calculates tax owed
     https://ksiegowosc.infor.pl/podatki/pit/pit/rozliczenia/3063125,2,PIT-2020-skala-podatkowa-stawki-i-koszty-uzyskania-przychodu.html"""
+    BEFORE_THRESHOLD_TAX = Decimal('0.17')
+    THRESHOLD = Decimal('85528')
+    AFTER_THRESHOLD_TAX = Decimal('0.32')
+    AFTER_THRESHOLD_CONSTANT = Decimal('14539.76')
     TAX_FREE_AMOUNT_THRESHOLDS = list_to_decimal(['8000', '13000', '85528', '127000'])
     TAX_FREE_AMOUNT_CONSTANTS = list_to_decimal(['1360', '834.88', '5000', '525.12', '41472'])
 
-    revenue = Decimal('0')  # przychód
-    expenses = Decimal('0')  # koszty
-    tax_reduction = Decimal('0')  # odliczenia od podatku
-    income_reduction = Decimal('0')  # odliczenia od dochodu
-    tax_prepayment = Decimal('0')  # zapłacone zaliczki
+    def __init__(self):
+        self.revenue = Decimal('0')  # przychód
+        self.expenses = Decimal('0')  # koszty
+        self.tax_reduction = Decimal('0')  # odliczenia od podatku
+        self.income_reduction = Decimal('0')  # odliczenia od dochodu
+        self.tax_prepayment = Decimal('0')  # zapłacone zaliczki
 
     def income(self):
         return self.revenue - self.expenses
@@ -76,12 +76,12 @@ class TaxPeriod:
     def tax(self):
         tax = Decimal('0')
         tax_basis = round_whole(self.tax_basis())
-        if THRESHOLD >= tax_basis:
-            tax = tax_basis * BEFORE_THRESHOLD_TAX
+        if self.THRESHOLD >= tax_basis:
+            tax = tax_basis * self.BEFORE_THRESHOLD_TAX
         else:
-            over_threshold = tax_basis - THRESHOLD
-            tax += AFTER_THRESHOLD_CONSTANT
-            tax += over_threshold * AFTER_THRESHOLD_TAX
+            over_threshold = tax_basis - self.THRESHOLD
+            tax += self.AFTER_THRESHOLD_CONSTANT
+            tax += over_threshold * self.AFTER_THRESHOLD_TAX
         return round_cents(tax)
 
     def tax_owed(self):
