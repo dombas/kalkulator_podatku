@@ -46,31 +46,27 @@ class TaxPeriod:
     def tax_free_amount(self):
         tax_basis = round_whole(self.tax_basis())
         tax_free_amount = Decimal('0')
-        TAX_FREE_AMOUNT_THRESHOLDS = self.TAX_FREE_AMOUNT_THRESHOLDS
-        TAX_FREE_AMOUNT_CONSTANTS = self.TAX_FREE_AMOUNT_CONSTANTS
-        if TAX_FREE_AMOUNT_THRESHOLDS[2] >= tax_basis:
-            tax_free_amount = TAX_FREE_AMOUNT_CONSTANTS[3]
+        if self.TAX_FREE_AMOUNT_THRESHOLDS[2] >= tax_basis:
+            tax_free_amount = self.TAX_FREE_AMOUNT_CONSTANTS[3]
         return tax_free_amount
 
     def tax_free_amount_end_of_year(self):
         tax_basis = round_whole(self.tax_basis())
         tax_free_amount = Decimal('0')
-        TAX_FREE_AMOUNT_THRESHOLDS = self.TAX_FREE_AMOUNT_THRESHOLDS
-        TAX_FREE_AMOUNT_CONSTANTS = self.TAX_FREE_AMOUNT_CONSTANTS
-        if TAX_FREE_AMOUNT_THRESHOLDS[0] >= tax_basis:
-            tax_free_amount = TAX_FREE_AMOUNT_CONSTANTS[0]
-        elif TAX_FREE_AMOUNT_THRESHOLDS[1] >= tax_basis:
-            tax_free_amount = TAX_FREE_AMOUNT_CONSTANTS[0] - \
-                              (TAX_FREE_AMOUNT_CONSTANTS[1] *
-                               (tax_basis - TAX_FREE_AMOUNT_THRESHOLDS[0]) /
-                               TAX_FREE_AMOUNT_CONSTANTS[2])
-        elif TAX_FREE_AMOUNT_THRESHOLDS[2] >= tax_basis:
-            tax_free_amount = TAX_FREE_AMOUNT_CONSTANTS[3]
-        elif TAX_FREE_AMOUNT_THRESHOLDS[3] >= tax_basis:
-            tax_free_amount = TAX_FREE_AMOUNT_CONSTANTS[3] - \
-                              (TAX_FREE_AMOUNT_CONSTANTS[3] *
-                               (tax_basis - TAX_FREE_AMOUNT_THRESHOLDS[2]) /
-                               TAX_FREE_AMOUNT_CONSTANTS[4])
+        if self.TAX_FREE_AMOUNT_THRESHOLDS[0] >= tax_basis:
+            tax_free_amount = self.TAX_FREE_AMOUNT_CONSTANTS[0]
+        elif self.TAX_FREE_AMOUNT_THRESHOLDS[1] >= tax_basis:
+            tax_free_amount = self.TAX_FREE_AMOUNT_CONSTANTS[0] - \
+                              (self.TAX_FREE_AMOUNT_CONSTANTS[1] *
+                               (tax_basis - self.TAX_FREE_AMOUNT_THRESHOLDS[0]) /
+                               self.TAX_FREE_AMOUNT_CONSTANTS[2])
+        elif self.TAX_FREE_AMOUNT_THRESHOLDS[2] >= tax_basis:
+            tax_free_amount = self.TAX_FREE_AMOUNT_CONSTANTS[3]
+        elif self.TAX_FREE_AMOUNT_THRESHOLDS[3] >= tax_basis:
+            tax_free_amount = self.TAX_FREE_AMOUNT_CONSTANTS[3] - \
+                              (self.TAX_FREE_AMOUNT_CONSTANTS[3] *
+                               (tax_basis - self.TAX_FREE_AMOUNT_THRESHOLDS[2]) /
+                               self.TAX_FREE_AMOUNT_CONSTANTS[4])
         return round_cents(tax_free_amount)
 
     def tax(self):
