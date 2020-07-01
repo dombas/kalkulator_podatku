@@ -37,6 +37,21 @@ class TaxPeriod:
         self.income_reduction = Decimal('0')  # odliczenia od dochodu
         self.tax_prepayment = Decimal('0')  # zapłacone zaliczki
 
+    def set_revenue(self, value_to_set):
+        self.revenue = value_to_set
+
+    def set_expenses(self, value_to_set):
+        self.expenses = value_to_set
+
+    def set_tax_reduction(self, value_to_set):
+        self.tax_reduction = value_to_set
+
+    def set_income_reduction(self, value_to_set):
+        self.income_reduction = value_to_set
+
+    def set_tax_prepayment(self, value_to_set):
+        self.tax_prepayment = value_to_set
+
     def income(self):
         return self.revenue - self.expenses
 
