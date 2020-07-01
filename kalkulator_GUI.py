@@ -46,6 +46,8 @@ class KalkulatorGUI:
         'Zapłacone zaliczki'
     ]
 
+    INPUTS_HEADER = 'Do wprowadzenia'
+
     OUTPUT_NAMES = [
         'income',
         'tax_basis',
@@ -59,6 +61,8 @@ class KalkulatorGUI:
         'Podatek według skali',
         'Zaliczka do zapłaty'
     ]
+
+    OUTPUTS_HEADER = 'Wyliczenia'
 
     inputs: 'Dict[str,FormField]'
     outputs: 'Dict[str,FormField]'
@@ -90,17 +94,26 @@ class KalkulatorGUI:
     def arrange_form(self):
         # FIXME remove code duplication
         current_row = 0
+
+        inputs_header = Label(self.root, text=KalkulatorGUI.INPUTS_HEADER)
+        inputs_header.grid(column=0, row=current_row, columnspan=2)
+        current_row += 1
+
         for input_name in KalkulatorGUI.INPUT_NAMES:
             input_field = self.inputs[input_name]
             input_field.label().grid(column=0, row=current_row)
             input_field.entry().grid(column=1, row=current_row)
             current_row += 1
 
+        outputs_header = Label(self.root, text=KalkulatorGUI.OUTPUTS_HEADER)
+        outputs_header.grid(column=0, row=current_row, columnspan=2)
+        current_row += 1
+
         for output_name in KalkulatorGUI.OUTPUT_NAMES:
             output_field = self.outputs[output_name]
             output_field.label().grid(column=0, row=current_row)
             output_field.entry().grid(column=1, row=current_row)
-            output_field.set_text("read only "+str(current_row))
+            output_field.set_text("read only " + str(current_row))
             current_row += 1
 
     def main_loop(self):
