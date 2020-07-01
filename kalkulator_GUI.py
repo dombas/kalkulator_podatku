@@ -2,7 +2,7 @@
 Author: Dominik Dąbek
 """
 
-from tkinter import *
+import tkinter as tk
 from typing import Dict
 
 from skala_podatkowa import TaxPeriod
@@ -10,8 +10,8 @@ from skala_podatkowa import TaxPeriod
 
 class FormField:
     def __init__(self, label_text, root):
-        self._label = Label(root, text=label_text)
-        self._entry = Entry(root)
+        self._label = tk.Label(root, text=label_text)
+        self._entry = tk.Entry(root)
 
     def entry(self):
         return self._entry
@@ -23,7 +23,7 @@ class FormField:
 class OutputFormField(FormField):
     def __init__(self, label_text, root):
         super().__init__(label_text, root)
-        self._entry_text = StringVar()
+        self._entry_text = tk.StringVar()
         self._entry.config(state='readonly', textvariable=self._entry_text)
 
     def set_text(self, text_to_set):
@@ -83,7 +83,7 @@ class KalkulatorGUI:
             ):
                 self.outputs[output_name] = OutputFormField(output_label, self.root)
 
-        self.root = Tk()
+        self.root = tk.Tk()
         self.inputs = {}
         self.outputs = {}
         self.tax_period = TaxPeriod()
@@ -95,7 +95,7 @@ class KalkulatorGUI:
         # FIXME remove code duplication
         current_row = 0
 
-        inputs_header = Label(self.root, text=KalkulatorGUI.INPUTS_HEADER)
+        inputs_header = tk.Label(self.root, text=KalkulatorGUI.INPUTS_HEADER)
         inputs_header.grid(column=0, row=current_row, columnspan=2)
         current_row += 1
 
@@ -105,7 +105,7 @@ class KalkulatorGUI:
             input_field.entry().grid(column=1, row=current_row)
             current_row += 1
 
-        outputs_header = Label(self.root, text=KalkulatorGUI.OUTPUTS_HEADER)
+        outputs_header = tk.Label(self.root, text=KalkulatorGUI.OUTPUTS_HEADER)
         outputs_header.grid(column=0, row=current_row, columnspan=2)
         current_row += 1
 
