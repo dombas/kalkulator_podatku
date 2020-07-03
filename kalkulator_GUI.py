@@ -3,6 +3,7 @@ Author: Dominik Dąbek
 """
 
 import tkinter as tk
+import tkinter.font as tk_font
 import decimal as dec
 from typing import Dict
 
@@ -28,6 +29,10 @@ class FormField:
         print("attaching callback")
         self._entry_text.trace('w', callback)
 
+    def apply_options(self, gui_options: 'GUIOptions'):
+        self._entry.config(font=gui_options.default_font())
+        self._label.config(font=gui_options.default_font())
+
 
 class OutputFormField(FormField):
     def __init__(self, label_text, root):
@@ -36,6 +41,18 @@ class OutputFormField(FormField):
 
     def set_text(self, text_to_set):
         self._entry_text.set(text_to_set)
+
+
+class GUIOptions:
+    def __init__(self):
+        self.font_size = 14
+        self.header_font_size = 20
+
+    def default_font(self):
+        return tk_font.Font(size=self.font_size)
+
+    def header_font(self):
+        return tk_font.Font(size=self.header_font_size)
 
 
 class KalkulatorGUI:
@@ -75,6 +92,9 @@ class KalkulatorGUI:
     inputs: 'Dict[str,FormField]'
     outputs: 'Dict[str,OutputFormField]'
     tax_period: 'TaxPeriod'
+    options: 'GUIOptions'
+    inputs_header: 'tk.Label'
+    outputs_header: 'tk.Label'
 
     def __init__(self):
         def create_inputs():
@@ -91,20 +111,24 @@ class KalkulatorGUI:
             ):
                 self.outputs[output_name] = OutputFormField(output_label, self.root)
 
+        def create_headers():
+            self.inputs_header = tk.Label(self.root, text=KalkulatorGUI.INPUTS_HEADER)
+            self.outputs_header = tk.Label(self.root, text=KalkulatorGUI.OUTPUTS_HEADER)
+
         self.root = tk.Tk()
         self.inputs = {}
         self.outputs = {}
         self.tax_period = TaxPeriod()
+        self.options = GUIOptions()
 
         create_inputs()
         create_outputs()
+        create_headers()
 
     def arrange_form(self):
         # FIXME remove code duplication
         current_row = 0
-
-        inputs_header = tk.Label(self.root, text=KalkulatorGUI.INPUTS_HEADER)
-        inputs_header.grid(column=0, row=current_row, columnspan=2)
+        self.inputs_header.grid(column=0, row=current_row, columnspan=2)
         current_row += 1
 
         for input_name in KalkulatorGUI.INPUT_NAMES:
@@ -113,8 +137,7 @@ class KalkulatorGUI:
             input_field.entry().grid(column=1, row=current_row)
             current_row += 1
 
-        outputs_header = tk.Label(self.root, text=KalkulatorGUI.OUTPUTS_HEADER)
-        outputs_header.grid(column=0, row=current_row, columnspan=2)
+        self.outputs_header.grid(column=0, row=current_row, columnspan=2)
         current_row += 1
 
         for output_name in KalkulatorGUI.OUTPUT_NAMES:
@@ -197,9 +220,31 @@ class KalkulatorGUI:
     def read_input(self, input_name):
         return self.inputs[input_name].get_input().replace(',', '.')
 
+    def all_form_fields(self):
+        return self.all_inputs() + self.all_outputs()
+
+    def all_outputs(self):
+        _all_outputs = []
+        for output_name in KalkulatorGUI.OUTPUT_NAMES:
+            _all_outputs.append(self.outputs[output_name])
+        return _all_outputs
+
+    def all_inputs(self):
+        _all_inputs = []
+        for input_name in KalkulatorGUI.INPUT_NAMES:
+            _all_inputs.append(self.inputs[input_name])
+        return _all_inputs
+
+    def apply_options(self):
+        for form_field in self.all_form_fields():
+            form_field.apply_options(self.options)
+        self.inputs_header.config(font=self.options.header_font())
+        self.outputs_header.config(font=self.options.header_font())
+
     def main_loop(self):
         self.arrange_form()
         self.assign_callbacks()
+        self.apply_options()
         self.root.mainloop()
 
 
