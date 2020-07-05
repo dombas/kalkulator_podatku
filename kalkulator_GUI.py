@@ -5,7 +5,7 @@ Author: Dominik Dąbek
 import tkinter as tk
 import tkinter.font as tk_font
 import decimal as dec
-from typing import Dict
+from typing import Dict, List, Callable
 
 from skala_podatkowa import TaxPeriod
 
@@ -16,30 +16,33 @@ class FormField:
         self._entry_text = tk.StringVar()
         self._entry = tk.Entry(root, textvariable=self._entry_text)
 
-    def entry(self):
+    def entry(self) -> 'tk.Entry':
         return self._entry
 
-    def label(self):
+    def label(self) -> 'tk.Label':
         return self._label
 
     def get_input(self) -> 'str':
         return self._entry.get()
 
-    def attach_write_callback(self, callback):
-        print("attaching callback")
+    def attach_write_callback(self, callback: 'Callable'):
         self._entry_text.trace('w', callback)
 
     def apply_options(self, gui_options: 'GUIOptions'):
         self._entry.config(font=gui_options.default_font())
         self._label.config(font=gui_options.default_font())
 
+    def grid(self, row: 'int'):
+        self._label.grid(column=0, row=row)
+        self._entry.grid(column=1, row=row)
+
 
 class OutputFormField(FormField):
-    def __init__(self, label_text, root):
+    def __init__(self, label_text: 'str', root: 'tk.Tk'):
         super().__init__(label_text, root)
         self._entry.config(state='readonly')
 
-    def set_text(self, text_to_set):
+    def set_text(self, text_to_set: 'str'):
         self._entry_text.set(text_to_set)
 
 
@@ -48,10 +51,10 @@ class GUIOptions:
         self.font_size = 14
         self.header_font_size = 20
 
-    def default_font(self):
+    def default_font(self) -> 'tk_font.Font':
         return tk_font.Font(size=self.font_size)
 
-    def header_font(self):
+    def header_font(self) -> 'tk_font.Font':
         return tk_font.Font(size=self.header_font_size)
 
 
@@ -89,12 +92,15 @@ class KalkulatorGUI:
 
     OUTPUTS_HEADER = 'Wyliczenia'
 
-    inputs: 'Dict[str,FormField]'
-    outputs: 'Dict[str,OutputFormField]'
-    tax_period: 'TaxPeriod'
-    options: 'GUIOptions'
-    inputs_header: 'tk.Label'
-    outputs_header: 'tk.Label'
+    # TODO add default values
+
+    _root: 'tk.Tk'
+    _inputs: 'Dict[str,FormField]'
+    _outputs: 'Dict[str,OutputFormField]'
+    _tax_period: 'TaxPeriod'
+    _options: 'GUIOptions'
+    _inputs_header: 'tk.Label'
+    _outputs_header: 'tk.Label'
 
     def __init__(self):
         def create_inputs():
@@ -102,150 +108,143 @@ class KalkulatorGUI:
                     KalkulatorGUI.INPUT_NAMES,
                     KalkulatorGUI.INPUT_LABELS
             ):
-                self.inputs[input_name] = FormField(input_label, self.root)
+                self._inputs[input_name] = FormField(input_label, self._root)
 
         def create_outputs():
             for output_name, output_label in zip(
                     KalkulatorGUI.OUTPUT_NAMES,
                     KalkulatorGUI.OUTPUT_LABELS
             ):
-                self.outputs[output_name] = OutputFormField(output_label, self.root)
+                self._outputs[output_name] = OutputFormField(output_label, self._root)
 
         def create_headers():
-            self.inputs_header = tk.Label(self.root, text=KalkulatorGUI.INPUTS_HEADER)
-            self.outputs_header = tk.Label(self.root, text=KalkulatorGUI.OUTPUTS_HEADER)
+            self._inputs_header = tk.Label(self._root, text=KalkulatorGUI.INPUTS_HEADER)
+            self._outputs_header = tk.Label(self._root, text=KalkulatorGUI.OUTPUTS_HEADER)
 
-        self.root = tk.Tk()
-        self.inputs = {}
-        self.outputs = {}
-        self.tax_period = TaxPeriod()
-        self.options = GUIOptions()
+        self._root = tk.Tk()
+        self._inputs = {}
+        self._outputs = {}
+        self._tax_period = TaxPeriod()
+        self._options = GUIOptions()
 
         create_inputs()
         create_outputs()
         create_headers()
 
-    def arrange_form(self):
-        # FIXME remove code duplication
+    def _arrange_form(self):
         current_row = 0
-        self.inputs_header.grid(column=0, row=current_row, columnspan=2)
+        self._inputs_header.grid(column=0, row=current_row, columnspan=2)
         current_row += 1
 
-        for input_name in KalkulatorGUI.INPUT_NAMES:
-            input_field = self.inputs[input_name]
-            input_field.label().grid(column=0, row=current_row)
-            input_field.entry().grid(column=1, row=current_row)
+        for input_field in self._all_inputs():
+            input_field.grid(current_row)
             current_row += 1
 
-        self.outputs_header.grid(column=0, row=current_row, columnspan=2)
+        self._outputs_header.grid(column=0, row=current_row, columnspan=2)
         current_row += 1
 
-        for output_name in KalkulatorGUI.OUTPUT_NAMES:
-            output_field = self.outputs[output_name]
-            output_field.label().grid(column=0, row=current_row)
-            output_field.entry().grid(column=1, row=current_row)
+        for output_field in self._all_outputs():
+            output_field.grid(current_row)
             output_field.set_text("read only " + str(current_row))
             current_row += 1
 
-    def assign_callbacks(self):
-        print("assigning callbacks")
-        for input_name in KalkulatorGUI.INPUT_NAMES:
-            self.inputs[input_name].attach_write_callback(self.update_callback)
+    def _assign_callbacks(self):
+        for input_field in self._all_inputs():
+            input_field.attach_write_callback(self._update_callback)
 
-    def update_callback(self, *args):
-        print("running update callback")
-        self.update_tax_period_from_inputs()
-        self.update_outputs()
+    def _update_callback(self, *_):
+        self._update_tax_period_from_inputs()
+        self._update_outputs()
 
-    def update_outputs(self):
-        self.outputs['income'].set_text(
-            self.tax_period.income()
+    def _update_outputs(self):
+        self._outputs['income'].set_text(
+            self._tax_period.income()
         )
-        self.outputs['tax_basis'].set_text(
-            self.tax_period.tax_basis()
+        self._outputs['tax_basis'].set_text(
+            self._tax_period.tax_basis()
         )
-        self.outputs['tax'].set_text(
-            self.tax_period.tax()
+        self._outputs['tax'].set_text(
+            self._tax_period.tax()
         )
-        self.outputs['tax_owed'].set_text(
-            self.tax_period.tax_owed()
+        self._outputs['tax_owed'].set_text(
+            self._tax_period.tax_owed()
         )
 
-    def update_tax_period_from_inputs(self):
+    def _update_tax_period_from_inputs(self):
         try:
-            self.tax_period.set_revenue(
-                dec.Decimal(self.read_input('revenue'))
+            self._tax_period.set_revenue(
+                dec.Decimal(self._read_input('revenue'))
             )
         except dec.InvalidOperation:
-            self.tax_period.set_revenue(
+            self._tax_period.set_revenue(
                 dec.Decimal('0')
             )
 
         try:
-            self.tax_period.set_expenses(
-                dec.Decimal(self.read_input('expenses'))
+            self._tax_period.set_expenses(
+                dec.Decimal(self._read_input('expenses'))
             )
         except dec.InvalidOperation:
-            self.tax_period.set_expenses(
+            self._tax_period.set_expenses(
                 dec.Decimal('0')
             )
 
         try:
-            self.tax_period.set_tax_reduction(
-                dec.Decimal(self.read_input('tax_reduction'))
+            self._tax_period.set_tax_reduction(
+                dec.Decimal(self._read_input('tax_reduction'))
             )
         except dec.InvalidOperation:
-            self.tax_period.set_tax_reduction(
+            self._tax_period.set_tax_reduction(
                 dec.Decimal('0')
             )
 
         try:
-            self.tax_period.set_income_reduction(
-                dec.Decimal(self.read_input('income_reduction'))
+            self._tax_period.set_income_reduction(
+                dec.Decimal(self._read_input('income_reduction'))
             )
         except dec.InvalidOperation:
-            self.tax_period.set_income_reduction(
+            self._tax_period.set_income_reduction(
                 dec.Decimal('0')
             )
 
         try:
-            self.tax_period.set_tax_prepayment(
-                dec.Decimal(self.read_input('tax_prepayment'))
+            self._tax_period.set_tax_prepayment(
+                dec.Decimal(self._read_input('tax_prepayment'))
             )
         except dec.InvalidOperation:
-            self.tax_period.set_tax_prepayment(
+            self._tax_period.set_tax_prepayment(
                 dec.Decimal('0')
             )
 
-    def read_input(self, input_name):
-        return self.inputs[input_name].get_input().replace(',', '.')
+    def _read_input(self, input_name:'str') -> 'str':
+        return self._inputs[input_name].get_input().replace(',', '.')
 
-    def all_form_fields(self):
-        return self.all_inputs() + self.all_outputs()
+    def _all_form_fields(self) -> 'List[FormField]':
+        return self._all_inputs() + self._all_outputs()
 
-    def all_outputs(self):
+    def _all_outputs(self) -> 'List[OutputFormField]':
         _all_outputs = []
         for output_name in KalkulatorGUI.OUTPUT_NAMES:
-            _all_outputs.append(self.outputs[output_name])
+            _all_outputs.append(self._outputs[output_name])
         return _all_outputs
 
-    def all_inputs(self):
+    def _all_inputs(self) -> 'List[FormField]':
         _all_inputs = []
         for input_name in KalkulatorGUI.INPUT_NAMES:
-            _all_inputs.append(self.inputs[input_name])
+            _all_inputs.append(self._inputs[input_name])
         return _all_inputs
 
-    def apply_options(self):
-        for form_field in self.all_form_fields():
-            form_field.apply_options(self.options)
-        self.inputs_header.config(font=self.options.header_font())
-        self.outputs_header.config(font=self.options.header_font())
+    def _apply_options(self):
+        for form_field in self._all_form_fields():
+            form_field.apply_options(self._options)
+        self._inputs_header.config(font=self._options.header_font())
+        self._outputs_header.config(font=self._options.header_font())
 
     def main_loop(self):
-        self.arrange_form()
-        self.assign_callbacks()
-        self.apply_options()
-        self.root.mainloop()
+        self._arrange_form()
+        self._assign_callbacks()
+        self._apply_options()
+        self._root.mainloop()
 
 
 def main():
