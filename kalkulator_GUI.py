@@ -58,6 +58,15 @@ class GUIOptions:
         return tk_font.Font(size=self.header_font_size)
 
 
+def convert_input(input_value: 'str') -> 'dec.Decimal':
+    cleaned_input = input_value.replace(',', '.')
+    decimal = dec.Decimal('0')
+    try:
+        decimal = dec.Decimal(cleaned_input)
+    finally:
+        return decimal
+
+
 class KalkulatorGUI:
     INPUT_NAMES = [
         'revenue',
@@ -99,8 +108,6 @@ class KalkulatorGUI:
     ]
 
     OUTPUTS_HEADER = 'Wyliczenia'
-
-    # TODO add default values
 
     _root: 'tk.Tk'
     _inputs: 'Dict[str,FormField]'
@@ -167,66 +174,41 @@ class KalkulatorGUI:
 
     def _update_outputs(self):
         self._outputs['income'].set_text(
-            self._tax_period.income()
+            str(self._tax_period.income())
         )
         self._outputs['tax_basis'].set_text(
-            self._tax_period.tax_basis()
+            str(self._tax_period.tax_basis())
         )
         self._outputs['tax'].set_text(
-            self._tax_period.tax()
+            str(self._tax_period.tax())
         )
         self._outputs['tax_owed'].set_text(
-            self._tax_period.tax_owed()
+            str(self._tax_period.tax_owed())
         )
 
     def _update_tax_period_from_inputs(self):
-        try:
-            self._tax_period.set_revenue(
-                dec.Decimal(self._read_input('revenue'))
-            )
-        except dec.InvalidOperation:
-            self._tax_period.set_revenue(
-                dec.Decimal('0')
-            )
+        self._tax_period.set_revenue(
+            self._read_input('revenue')
+        )
 
-        try:
-            self._tax_period.set_expenses(
-                dec.Decimal(self._read_input('expenses'))
-            )
-        except dec.InvalidOperation:
-            self._tax_period.set_expenses(
-                dec.Decimal('0')
-            )
+        self._tax_period.set_expenses(
+            self._read_input('expenses')
+        )
 
-        try:
-            self._tax_period.set_tax_reduction(
-                dec.Decimal(self._read_input('tax_reduction'))
-            )
-        except dec.InvalidOperation:
-            self._tax_period.set_tax_reduction(
-                dec.Decimal('0')
-            )
+        self._tax_period.set_tax_reduction(
+            self._read_input('tax_reduction')
+        )
 
-        try:
-            self._tax_period.set_income_reduction(
-                dec.Decimal(self._read_input('income_reduction'))
-            )
-        except dec.InvalidOperation:
-            self._tax_period.set_income_reduction(
-                dec.Decimal('0')
-            )
+        self._tax_period.set_income_reduction(
+            self._read_input('income_reduction')
+        )
 
-        try:
-            self._tax_period.set_tax_prepayment(
-                dec.Decimal(self._read_input('tax_prepayment'))
-            )
-        except dec.InvalidOperation:
-            self._tax_period.set_tax_prepayment(
-                dec.Decimal('0')
-            )
+        self._tax_period.set_tax_prepayment(
+            self._read_input('tax_prepayment')
+        )
 
-    def _read_input(self, input_name: 'str') -> 'str':
-        return self._inputs[input_name].get_input().replace(',', '.')
+    def _read_input(self, input_name: 'str') -> 'dec.Decimal':
+        return convert_input(self._inputs[input_name].get_input())
 
     def _all_form_fields(self) -> 'List[FormField]':
         return self._all_inputs() + self._all_outputs()

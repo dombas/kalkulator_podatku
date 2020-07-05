@@ -3,8 +3,11 @@ Author: Dominik Dąbek
 """
 
 import unittest
+from typing import List, Tuple
+
 import skala_podatkowa
 from decimal import *
+from kalkulator_GUI import convert_input
 
 
 class BaseTestCase(unittest.TestCase):
@@ -188,6 +191,43 @@ class Test150k(BaseTestCase):
 
     def test_tax_owed_rounded_end_of_year(self):
         self._test_tax_owed_end_of_year_rounded('30423')
+
+
+class InputHandlingTestCase(BaseTestCase):
+    def _assert_map(self, inputs_expected: 'List[Tuple[str,str]]'):
+        for input_value, expected in inputs_expected:
+            self.assertEqual(
+                convert_input(input_value),
+                Decimal(expected))
+
+    def test_separators(self):
+        inputs_expected = [
+            ('1,23', '1.23'),
+            ('600.30', '600.30')
+        ]
+        self._assert_map(inputs_expected)
+
+    def test_multiple_separators(self):
+        inputs_expected = [
+            ('1 000,50', '1000.50'),
+            ('6,954,555.20', '6954555.20'),
+            ('12.343.222,50', '12343222.50')
+        ]
+        self._assert_map(inputs_expected)
+
+    def test_non_digit_characters(self):
+        inputs_expected = [
+            ('1,23zł', '1.23'),
+            ('600.30gbp', '600.30')
+        ]
+        self._assert_map(inputs_expected)
+
+    def test_negative_values(self):
+        inputs_expected = [
+            ('-1,23', '-1.23'),
+            ('-600.30', '-600.30')
+        ]
+        self._assert_map(inputs_expected)
 
 
 if __name__ == '__main__':
