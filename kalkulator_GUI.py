@@ -11,7 +11,7 @@ from skala_podatkowa import TaxPeriod
 
 
 class FormField:
-    def __init__(self, label_text, root):
+    def __init__(self, label_text: 'str', root: 'tk.Tk'):
         self._label = tk.Label(root, text=label_text)
         self._entry_text = tk.StringVar()
         self._entry = tk.Entry(root, textvariable=self._entry_text)

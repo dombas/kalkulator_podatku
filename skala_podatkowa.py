@@ -5,18 +5,18 @@ Author: Dominik Dąbek
 from decimal import *
 
 
-def list_to_decimal(list_of_str):
+def list_to_decimal(list_of_str: 'List[str]') -> 'List[Decimal]':
     list_of_decimals = []
     for s in list_of_str:
         list_of_decimals.append(Decimal(s))
     return list_of_decimals
 
 
-def round_cents(dec):
+def round_cents(dec: 'Decimal') -> 'Decimal':
     return dec.quantize(Decimal('.01'))
 
 
-def round_whole(dec):
+def round_whole(dec: 'Decimal') -> 'Decimal':
     return dec.quantize(Decimal('1'))
 
 
@@ -37,35 +37,35 @@ class TaxPeriod:
         self.income_reduction = Decimal('0')  # odliczenia od dochodu
         self.tax_prepayment = Decimal('0')  # zapłacone zaliczki
 
-    def set_revenue(self, value_to_set):
+    def set_revenue(self, value_to_set: 'Decimal'):
         self.revenue = value_to_set
 
-    def set_expenses(self, value_to_set):
+    def set_expenses(self, value_to_set: 'Decimal'):
         self.expenses = value_to_set
 
-    def set_tax_reduction(self, value_to_set):
+    def set_tax_reduction(self, value_to_set: 'Decimal'):
         self.tax_reduction = value_to_set
 
-    def set_income_reduction(self, value_to_set):
+    def set_income_reduction(self, value_to_set: 'Decimal'):
         self.income_reduction = value_to_set
 
-    def set_tax_prepayment(self, value_to_set):
+    def set_tax_prepayment(self, value_to_set: 'Decimal'):
         self.tax_prepayment = value_to_set
 
-    def income(self):
+    def income(self) -> 'Decimal':
         return self.revenue - self.expenses
 
-    def tax_basis(self):
+    def tax_basis(self) -> 'Decimal':
         return Decimal(self.income() - self.income_reduction)
 
-    def tax_free_amount(self):
+    def tax_free_amount(self) -> 'Decimal':
         tax_basis = round_whole(self.tax_basis())
         tax_free_amount = Decimal('0')
         if self.TAX_FREE_AMOUNT_THRESHOLDS[2] >= tax_basis:
             tax_free_amount = self.TAX_FREE_AMOUNT_CONSTANTS[3]
         return tax_free_amount
 
-    def tax_free_amount_end_of_year(self):
+    def tax_free_amount_end_of_year(self) -> Decimal:
         tax_basis = round_whole(self.tax_basis())
         tax_free_amount = Decimal('0')
         if self.TAX_FREE_AMOUNT_THRESHOLDS[0] >= tax_basis:
@@ -84,7 +84,7 @@ class TaxPeriod:
                                self.TAX_FREE_AMOUNT_CONSTANTS[4])
         return round_cents(tax_free_amount)
 
-    def tax(self):
+    def tax(self) -> 'Decimal':
         tax = Decimal('0')
         tax_basis = round_whole(self.tax_basis())
         if self.THRESHOLD >= tax_basis:
@@ -95,7 +95,7 @@ class TaxPeriod:
             tax += over_threshold * self.AFTER_THRESHOLD_TAX
         return round_cents(tax)
 
-    def tax_owed(self):
+    def tax_owed(self) -> 'Decimal':
         tax_owed = self.tax()
         tax_owed -= self.tax_reduction
         tax_owed -= self.tax_free_amount()
@@ -104,7 +104,7 @@ class TaxPeriod:
             tax_owed = Decimal('0')
         return tax_owed
 
-    def tax_owed_end_of_year(self):
+    def tax_owed_end_of_year(self) -> 'Decimal':
         tax_owed = self.tax()
         tax_owed -= self.tax_reduction
         tax_owed -= self.tax_free_amount_end_of_year()
@@ -113,9 +113,9 @@ class TaxPeriod:
             tax_owed = Decimal('0')
         return tax_owed
 
-    def tax_owed_rounded(self):
+    def tax_owed_rounded(self) -> 'Decimal':
         return round_whole(self.tax_owed())
 
-    def tax_owed_end_of_year_rounded(self):
+    def tax_owed_end_of_year_rounded(self) -> 'Decimal':
         return round_whole(self.tax_owed_end_of_year())
         pass
