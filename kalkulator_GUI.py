@@ -1,7 +1,7 @@
 """
 Author: Dominik Dąbek
 """
-
+import re
 import tkinter as tk
 import tkinter.font as tk_font
 import decimal as dec
@@ -58,11 +58,38 @@ class GUIOptions:
         return tk_font.Font(size=self.header_font_size)
 
 
+def strip_non_numeric(input_str: 'str') -> 'str':
+    return re.match(r'^\D*(\d.*\d)\D*$', input_str).group(1)
+
+
+def only_numeric(input_str: 'str') -> 'str':
+    return re.sub(r'\D', '', input_str)
+
+
+def clean_input(input_str: 'str') -> 'str':
+    cleaned_input = strip_non_numeric(input_str)
+    separator_index = None
+    if not cleaned_input[-2].isnumeric():
+        separator_index = -2
+    elif not cleaned_input[-3].isnumeric():
+        separator_index = -3
+    if separator_index:
+        whole_part = only_numeric(cleaned_input[:separator_index])
+        fraction_part = only_numeric(cleaned_input[separator_index+1:])
+        cleaned_input = whole_part+'.'+fraction_part
+    else:
+        cleaned_input = only_numeric(cleaned_input)
+    return cleaned_input
+
+
 def convert_input(input_value: 'str') -> 'dec.Decimal':
-    cleaned_input = input_value.replace(',', '.')
+    cleaned_input = clean_input(input_value)
     decimal = dec.Decimal('0')
     try:
         decimal = dec.Decimal(cleaned_input)
+    except dec.InvalidOperation:
+        print(f'Error reading input \"{input_value}\"')
+        # TODO inform user which field is having problems
     finally:
         return decimal
 

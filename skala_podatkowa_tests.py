@@ -7,7 +7,7 @@ from typing import List, Tuple
 
 import skala_podatkowa
 from decimal import *
-from kalkulator_GUI import convert_input
+from kalkulator_GUI import convert_input, strip_non_numeric, only_numeric, clean_input
 
 
 class BaseTestCase(unittest.TestCase):
@@ -194,18 +194,54 @@ class Test150k(BaseTestCase):
 
 
 class InputHandlingTestCase(BaseTestCase):
-    def _assert_map(self, inputs_expected: 'List[Tuple[str,str]]'):
+    def _test_convert_input(self, inputs_expected: 'List[Tuple[str,str]]'):
         for input_value, expected in inputs_expected:
             self.assertEqual(
-                convert_input(input_value),
-                Decimal(expected))
+                Decimal(expected),
+                convert_input(input_value))
+
+    def test_strip_non_numeric(self):
+        inputs_expected = [
+            ('100', '100'),
+            ('aa345bb', '345'),
+            ('.123.34zł', '123.34'),
+            ('5 600', '5 600')
+        ]
+        for input_value, expected in inputs_expected:
+            self.assertEqual(
+                expected,
+                strip_non_numeric(input_value))
+
+    def test_only_numeric(self):
+        inputs_expected = [
+            ('345', '345'),
+            ('.123.34zł', '12334'),
+            ('5 600', '5600')
+        ]
+        for input_value, expected in inputs_expected:
+            self.assertEqual(
+                expected,
+                only_numeric(input_value))
+
+    def test_clean_input(self):
+        inputs_expected = [
+            ('1 000,50', '1000.50'),
+            ('6,954,555.20', '6954555.20'),
+            ('12.343.222,50', '12343222.50'),
+            ('1,23zł', '1.23'),
+            ('600.30gbp', '600.30'),
+        ]
+        for input_value, expected in inputs_expected:
+            self.assertEqual(
+                expected,
+                clean_input(input_value))
 
     def test_separators(self):
         inputs_expected = [
             ('1,23', '1.23'),
             ('600.30', '600.30')
         ]
-        self._assert_map(inputs_expected)
+        self._test_convert_input(inputs_expected)
 
     def test_multiple_separators(self):
         inputs_expected = [
@@ -213,21 +249,14 @@ class InputHandlingTestCase(BaseTestCase):
             ('6,954,555.20', '6954555.20'),
             ('12.343.222,50', '12343222.50')
         ]
-        self._assert_map(inputs_expected)
+        self._test_convert_input(inputs_expected)
 
     def test_non_digit_characters(self):
         inputs_expected = [
             ('1,23zł', '1.23'),
             ('600.30gbp', '600.30')
         ]
-        self._assert_map(inputs_expected)
-
-    def test_negative_values(self):
-        inputs_expected = [
-            ('-1,23', '-1.23'),
-            ('-600.30', '-600.30')
-        ]
-        self._assert_map(inputs_expected)
+        self._test_convert_input(inputs_expected)
 
 
 if __name__ == '__main__':
