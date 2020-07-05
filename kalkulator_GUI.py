@@ -11,9 +11,9 @@ from skala_podatkowa import TaxPeriod
 
 
 class FormField:
-    def __init__(self, label_text: 'str', root: 'tk.Tk'):
+    def __init__(self, label_text: 'str', root: 'tk.Tk', starting_value: 'str' = ''):
         self._label = tk.Label(root, text=label_text)
-        self._entry_text = tk.StringVar()
+        self._entry_text = tk.StringVar(value=starting_value)
         self._entry = tk.Entry(root, textvariable=self._entry_text)
 
     def entry(self) -> 'tk.Entry':
@@ -74,6 +74,14 @@ class KalkulatorGUI:
         'Zapłacone zaliczki'
     ]
 
+    DEFAULT_INPUT_VALUES = [
+        '11300,00',
+        '1153,73',
+        '918,82',
+        '652,41',
+        '0,00'
+    ]
+
     INPUTS_HEADER = 'Do wprowadzenia'
 
     OUTPUT_NAMES = [
@@ -104,11 +112,12 @@ class KalkulatorGUI:
 
     def __init__(self):
         def create_inputs():
-            for input_name, input_label in zip(
+            for input_name, label_text, starting_value in zip(
                     KalkulatorGUI.INPUT_NAMES,
-                    KalkulatorGUI.INPUT_LABELS
+                    KalkulatorGUI.INPUT_LABELS,
+                    KalkulatorGUI.DEFAULT_INPUT_VALUES
             ):
-                self._inputs[input_name] = FormField(input_label, self._root)
+                self._inputs[input_name] = FormField(label_text, self._root, starting_value)
 
         def create_outputs():
             for output_name, output_label in zip(
@@ -216,7 +225,7 @@ class KalkulatorGUI:
                 dec.Decimal('0')
             )
 
-    def _read_input(self, input_name:'str') -> 'str':
+    def _read_input(self, input_name: 'str') -> 'str':
         return self._inputs[input_name].get_input().replace(',', '.')
 
     def _all_form_fields(self) -> 'List[FormField]':
@@ -244,6 +253,7 @@ class KalkulatorGUI:
         self._arrange_form()
         self._assign_callbacks()
         self._apply_options()
+        self._update_callback()
         self._root.mainloop()
 
 
