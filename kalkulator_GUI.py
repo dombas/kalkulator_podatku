@@ -3,19 +3,18 @@ Author: Dominik Dąbek
 """
 import re
 import tkinter as tk
-import tkinter.ttk as ttk
-import tkinter.font as tk_font
+from tkinter import ttk
+from tkinter import font as tk_font
 import decimal as dec
 from typing import Dict, List, Callable
-
 from skala_podatkowa import TaxPeriod
 
 
 class FormField:
-    def __init__(self, label_text: 'str', root: 'tk.Frame', options: 'GUIOptions', starting_value: 'str' = ''):
-        self._label = tk.Label(root, text=label_text)
+    def __init__(self, label_text: 'str', parent: 'tk.Frame', options: 'GUIOptions', starting_value: 'str' = ''):
+        self._label = tk.Label(parent, text=label_text)
         self._entry_text = tk.StringVar(value=starting_value)
-        self._entry = tk.Entry(root, textvariable=self._entry_text)
+        self._entry = tk.Entry(parent, textvariable=self._entry_text)
         self._default_background = self._entry.cget('background')
         self._options = options
 
@@ -49,8 +48,8 @@ class FormField:
 
 
 class OutputFormField(FormField):
-    def __init__(self, label_text: 'str', root: 'tk.Frame', options: 'GUIOptions'):
-        super().__init__(label_text, root, options)
+    def __init__(self, label_text: 'str', parent: 'tk.Frame', options: 'GUIOptions'):
+        super().__init__(label_text, parent, options)
         self._entry.config(state='readonly')
 
     def set_text(self, text_to_set: 'str'):
@@ -61,13 +60,17 @@ class GUIOptions:
     def __init__(self):
         self.font_size = 14
         self.header_font_size = 20
+        self.tab_font_size = 20
         self.error_background = 'salmon'
 
     def default_font(self) -> 'tk_font.Font':
         return tk_font.Font(size=self.font_size)
 
     def header_font(self) -> 'tk_font.Font':
-        return tk_font.Font(size=self.header_font_size)
+        return tk_font.Font(family='Times', size=self.header_font_size)
+
+    def tab_font(self) -> 'tk_font.Font':
+        return tk_font.Font(family='Helvetica', size=self.tab_font_size, weight='bold')
 
 
 def strip_non_numeric(input_str: 'str') -> 'str':
@@ -148,6 +151,9 @@ class KalkulatorGUI:
 
     OUTPUTS_HEADER = 'Wyliczenia'
 
+    MAIN_TAB_TEXT = 'ZALICZKA'
+    OPTIONS_TAB_TEXT = 'OPCJE'
+
     _root: 'tk.Tk'
     _inputs: 'Dict[str,FormField]'
     _outputs: 'Dict[str,OutputFormField]'
@@ -155,28 +161,38 @@ class KalkulatorGUI:
     _options: 'GUIOptions'
     _inputs_frame: 'ttk.LabelFrame'
     _outputs_frame: 'ttk.LabelFrame'
+    _notebook: 'ttk.Notebook'
+    _main_tab: 'tk.Frame'
+    _options_tab: 'tk.Frame'
 
     def __init__(self):
-        def create_inputs():
+        def create_inputs(parent):
             for input_name, label_text, starting_value in zip(
                     KalkulatorGUI.INPUT_NAMES,
                     KalkulatorGUI.INPUT_LABELS,
                     KalkulatorGUI.DEFAULT_INPUT_VALUES
             ):
-                self._inputs[input_name] = FormField(label_text, self._inputs_frame, self._options, starting_value)
+                self._inputs[input_name] = FormField(
+                    label_text, parent, self._options, starting_value)
 
-        def create_outputs():
+        def create_outputs(parent):
             for output_name, output_label in zip(
                     KalkulatorGUI.OUTPUT_NAMES,
                     KalkulatorGUI.OUTPUT_LABELS
             ):
-                self._outputs[output_name] = OutputFormField(output_label, self._outputs_frame, self._options)
+                self._outputs[output_name] = OutputFormField(
+                    output_label, parent, self._options)
 
-        def create_frames():
-            style = ttk.Style()
-            style.configure('TLabelframe.Label', font=self._options.header_font())
-            self._inputs_frame = ttk.Labelframe(self._root, text=KalkulatorGUI.INPUTS_HEADER)
-            self._outputs_frame = ttk.Labelframe(self._root, text=KalkulatorGUI.OUTPUTS_HEADER)
+        def create_frames(parent):
+            self._inputs_frame = ttk.Labelframe(parent, text=KalkulatorGUI.INPUTS_HEADER)
+            self._outputs_frame = ttk.Labelframe(parent, text=KalkulatorGUI.OUTPUTS_HEADER)
+
+        def create_notebook(parent):
+            self._notebook = ttk.Notebook(parent)
+
+        def create_tabs(parent):
+            self._main_tab = tk.Frame(parent)
+            self._options_tab = tk.Frame(parent)
 
         self._root = tk.Tk()
         self._inputs = {}
@@ -184,14 +200,23 @@ class KalkulatorGUI:
         self._tax_period = TaxPeriod()
         self._options = GUIOptions()
 
-        create_frames()
-        create_inputs()
-        create_outputs()
+        create_notebook(parent=self._root)
+        create_tabs(parent=self._notebook)
+        create_frames(parent=self._main_tab)
+        create_inputs(parent=self._inputs_frame)
+        create_outputs(parent=self._outputs_frame)
 
     def _arrange_form(self):
-        self._root.columnconfigure(0, weight=1)
-        self._root.rowconfigure(0, weight=1)
-        self._root.rowconfigure(1, weight=1)
+        self._main_tab.columnconfigure(0, weight=1)
+        self._main_tab.rowconfigure(0, weight=1)
+        self._main_tab.rowconfigure(1, weight=1)
+
+        self._notebook.pack(fill='both', expand=1)
+        self._main_tab.pack(fill='both', expand=1)
+        self._options_tab.pack(fill='both', expand=1)
+
+        self._notebook.add(self._main_tab, text=KalkulatorGUI.MAIN_TAB_TEXT)
+        self._notebook.add(self._options_tab, text=KalkulatorGUI.OPTIONS_TAB_TEXT)
 
         self._inputs_frame.grid(column=0, row=0, sticky='new')
         self._inputs_frame.columnconfigure(1, weight=1)
@@ -277,6 +302,9 @@ class KalkulatorGUI:
     def _apply_options(self):
         for form_field in self._all_form_fields():
             form_field.apply_options(self._options)
+        style = ttk.Style()
+        style.configure('TLabelframe.Label', font=self._options.header_font())
+        style.configure('TNotebook.Tab', font=self._options.tab_font())
 
     def main_loop(self):
         self._arrange_form()
