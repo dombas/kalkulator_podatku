@@ -3,6 +3,7 @@ Author: Dominik Dąbek
 """
 import re
 import tkinter as tk
+import tkinter.ttk as ttk
 import tkinter.font as tk_font
 import decimal as dec
 from typing import Dict, List, Callable
@@ -35,7 +36,7 @@ class FormField:
 
     def grid(self, row: 'int'):
         self._label.grid(column=0, row=row)
-        self._entry.grid(column=1, row=row)
+        self._entry.grid(column=1, row=row, sticky='we')
 
     def set_error(self):
         self._entry.config(background='red')
@@ -148,8 +149,8 @@ class KalkulatorGUI:
     _outputs: 'Dict[str,OutputFormField]'
     _tax_period: 'TaxPeriod'
     _options: 'GUIOptions'
-    _inputs_header: 'tk.Label'
-    _outputs_header: 'tk.Label'
+    _inputs_frame: 'ttk.LabelFrame'
+    _outputs_frame: 'ttk.LabelFrame'
 
     def __init__(self):
         def create_inputs():
@@ -167,9 +168,11 @@ class KalkulatorGUI:
             ):
                 self._outputs[output_name] = OutputFormField(output_label, self._root)
 
-        def create_headers():
-            self._inputs_header = tk.Label(self._root, text=KalkulatorGUI.INPUTS_HEADER)
-            self._outputs_header = tk.Label(self._root, text=KalkulatorGUI.OUTPUTS_HEADER)
+        def create_frames():
+            style = ttk.Style()
+            style.configure('TLabelframe.Label', font=self._options.header_font())
+            self._inputs_frame = ttk.Labelframe(self._root, text=KalkulatorGUI.INPUTS_HEADER)
+            self._outputs_frame = ttk.Labelframe(self._root, text=KalkulatorGUI.OUTPUTS_HEADER)
 
         self._root = tk.Tk()
         self._inputs = {}
@@ -177,22 +180,25 @@ class KalkulatorGUI:
         self._tax_period = TaxPeriod()
         self._options = GUIOptions()
 
+        create_frames()
         create_inputs()
         create_outputs()
-        create_headers()
 
     def _arrange_form(self):
-        current_row = 0
-        self._inputs_header.grid(column=0, row=current_row, columnspan=2)
-        current_row += 1
+        self._root.columnconfigure(0, weight=1)
+        self._root.rowconfigure(0, weight=1)
+        self._root.rowconfigure(1, weight=1)
 
+        self._inputs_frame.grid(column=0, row=0, sticky='new')
+        self._inputs_frame.columnconfigure(1, weight=1)
+        current_row = 0
         for input_field in self._all_inputs():
             input_field.grid(current_row)
             current_row += 1
 
-        self._outputs_header.grid(column=0, row=current_row, columnspan=2)
-        current_row += 1
-
+        self._outputs_frame.grid(column=0, row=1, sticky='new')
+        self._outputs_frame.columnconfigure(1, weight=1)
+        current_row = 0
         for output_field in self._all_outputs():
             output_field.grid(current_row)
             output_field.set_text("read only " + str(current_row))
@@ -267,8 +273,6 @@ class KalkulatorGUI:
     def _apply_options(self):
         for form_field in self._all_form_fields():
             form_field.apply_options(self._options)
-        self._inputs_header.config(font=self._options.header_font())
-        self._outputs_header.config(font=self._options.header_font())
 
     def main_loop(self):
         self._arrange_form()
