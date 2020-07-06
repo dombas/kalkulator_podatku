@@ -12,11 +12,12 @@ from skala_podatkowa import TaxPeriod
 
 
 class FormField:
-    def __init__(self, label_text: 'str', root: 'tk.Tk', starting_value: 'str' = ''):
+    def __init__(self, label_text: 'str', root: 'tk.Frame', options: 'GUIOptions', starting_value: 'str' = ''):
         self._label = tk.Label(root, text=label_text)
         self._entry_text = tk.StringVar(value=starting_value)
         self._entry = tk.Entry(root, textvariable=self._entry_text)
         self._default_background = self._entry.cget('background')
+        self._options = options
 
     def entry(self) -> 'tk.Entry':
         return self._entry
@@ -30,24 +31,26 @@ class FormField:
     def attach_write_callback(self, callback: 'Callable'):
         self._entry_text.trace('w', callback)
 
-    def apply_options(self, gui_options: 'GUIOptions'):
-        self._entry.config(font=gui_options.default_font())
-        self._label.config(font=gui_options.default_font())
+    def apply_options(self, gui_options: 'GUIOptions' = None):
+        if gui_options:
+            self._options = gui_options
+        self._entry.config(font=self._options.default_font())
+        self._label.config(font=self._options.default_font())
 
     def grid(self, row: 'int'):
         self._label.grid(column=0, row=row)
         self._entry.grid(column=1, row=row, sticky='we')
 
     def set_error(self):
-        self._entry.config(background='red')
+        self._entry.config(background=self._options.error_background)
 
     def clear_error(self):
         self._entry.config(background=self._default_background)
 
 
 class OutputFormField(FormField):
-    def __init__(self, label_text: 'str', root: 'tk.Tk'):
-        super().__init__(label_text, root)
+    def __init__(self, label_text: 'str', root: 'tk.Frame', options: 'GUIOptions'):
+        super().__init__(label_text, root, options)
         self._entry.config(state='readonly')
 
     def set_text(self, text_to_set: 'str'):
@@ -58,6 +61,7 @@ class GUIOptions:
     def __init__(self):
         self.font_size = 14
         self.header_font_size = 20
+        self.error_background = 'salmon'
 
     def default_font(self) -> 'tk_font.Font':
         return tk_font.Font(size=self.font_size)
@@ -159,14 +163,14 @@ class KalkulatorGUI:
                     KalkulatorGUI.INPUT_LABELS,
                     KalkulatorGUI.DEFAULT_INPUT_VALUES
             ):
-                self._inputs[input_name] = FormField(label_text, self._root, starting_value)
+                self._inputs[input_name] = FormField(label_text, self._inputs_frame, self._options, starting_value)
 
         def create_outputs():
             for output_name, output_label in zip(
                     KalkulatorGUI.OUTPUT_NAMES,
                     KalkulatorGUI.OUTPUT_LABELS
             ):
-                self._outputs[output_name] = OutputFormField(output_label, self._root)
+                self._outputs[output_name] = OutputFormField(output_label, self._outputs_frame, self._options)
 
         def create_frames():
             style = ttk.Style()
