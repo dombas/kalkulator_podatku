@@ -236,6 +236,13 @@ class InputHandlingTestCase(BaseTestCase):
                 expected,
                 clean_input(input_value))
 
+    def test_convert_input_short(self):
+        inputs_expected = [
+            ('0,', '0'),
+            ('0.', '0')
+        ]
+        self._test_convert_input(inputs_expected)
+
     def test_separators(self):
         inputs_expected = [
             ('1,23', '1.23'),

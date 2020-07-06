@@ -15,6 +15,7 @@ class FormField:
         self._label = tk.Label(root, text=label_text)
         self._entry_text = tk.StringVar(value=starting_value)
         self._entry = tk.Entry(root, textvariable=self._entry_text)
+        self._default_background = self._entry.cget('background')
 
     def entry(self) -> 'tk.Entry':
         return self._entry
@@ -35,6 +36,12 @@ class FormField:
     def grid(self, row: 'int'):
         self._label.grid(column=0, row=row)
         self._entry.grid(column=1, row=row)
+
+    def set_error(self):
+        self._entry.config(background='red')
+
+    def clear_error(self):
+        self._entry.config(background=self._default_background)
 
 
 class OutputFormField(FormField):
@@ -69,29 +76,29 @@ def only_numeric(input_str: 'str') -> 'str':
 def clean_input(input_str: 'str') -> 'str':
     cleaned_input = strip_non_numeric(input_str)
     separator_index = None
-    if not cleaned_input[-2].isnumeric():
-        separator_index = -2
-    elif not cleaned_input[-3].isnumeric():
-        separator_index = -3
+    try:
+        if not cleaned_input[-2].isnumeric():
+            separator_index = -2
+        elif not cleaned_input[-3].isnumeric():
+            separator_index = -3
+    except IndexError:
+        pass
     if separator_index:
         whole_part = only_numeric(cleaned_input[:separator_index])
-        fraction_part = only_numeric(cleaned_input[separator_index+1:])
-        cleaned_input = whole_part+'.'+fraction_part
+        fraction_part = only_numeric(cleaned_input[separator_index + 1:])
+        cleaned_input = whole_part + '.' + fraction_part
     else:
         cleaned_input = only_numeric(cleaned_input)
     return cleaned_input
 
 
 def convert_input(input_value: 'str') -> 'dec.Decimal':
-    cleaned_input = clean_input(input_value)
-    decimal = dec.Decimal('0')
     try:
+        decimal = dec.Decimal(input_value.replace(',', '.'))
+    except (AttributeError, dec.InvalidOperation):
+        cleaned_input = clean_input(input_value)
         decimal = dec.Decimal(cleaned_input)
-    except dec.InvalidOperation:
-        print(f'Error reading input \"{input_value}\"')
-        # TODO inform user which field is having problems
-    finally:
-        return decimal
+    return decimal
 
 
 class KalkulatorGUI:
@@ -235,7 +242,12 @@ class KalkulatorGUI:
         )
 
     def _read_input(self, input_name: 'str') -> 'dec.Decimal':
-        return convert_input(self._inputs[input_name].get_input())
+        try:
+            self._inputs[input_name].clear_error()
+            return convert_input(self._inputs[input_name].get_input())
+        except (dec.InvalidOperation, AttributeError):
+            self._inputs[input_name].set_error()
+            return dec.Decimal('0')
 
     def _all_form_fields(self) -> 'List[FormField]':
         return self._all_inputs() + self._all_outputs()
