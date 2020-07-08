@@ -7,7 +7,7 @@ from typing import List, Tuple
 
 import skala_podatkowa
 from decimal import *
-from kalkulator_GUI import convert_input, strip_non_numeric, only_numeric, clean_input
+from kalkulator_GUI import convert_input, strip_non_numeric, only_numeric, clean_input, save_inputs, load_inputs
 
 
 class BaseTestCase(unittest.TestCase):
@@ -193,7 +193,7 @@ class Test150k(BaseTestCase):
         self._test_tax_owed_end_of_year_rounded('30423')
 
 
-class InputHandlingTestCase(BaseTestCase):
+class InputHandlingTestCase(unittest.TestCase):
     def _test_convert_input(self, inputs_expected: 'List[Tuple[str,str]]'):
         for input_value, expected in inputs_expected:
             self.assertEqual(
@@ -264,6 +264,20 @@ class InputHandlingTestCase(BaseTestCase):
             ('600.30gbp', '600.30')
         ]
         self._test_convert_input(inputs_expected)
+
+
+class SavingLoadingTestCase(unittest.TestCase):
+    def test_save_load(self):
+        inputs_dict = {
+            'revenue': '2000',
+            'expenses': '1000',
+            'tax_reduction': '200',
+            'income_reduction': '100',
+            'tax_prepayment': '50'
+        }
+        save_inputs(inputs_dict)
+        loaded_dict = load_inputs()
+        self.assertDictEqual(inputs_dict, loaded_dict, "Błąd zapisu danych")
 
 
 if __name__ == '__main__':

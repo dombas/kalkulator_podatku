@@ -1,6 +1,7 @@
 """
 Author: Dominik Dąbek
 """
+import json
 import re
 import tkinter as tk
 from tkinter import ttk
@@ -8,6 +9,8 @@ from tkinter import font as tk_font
 import decimal as dec
 from typing import Dict, List, Callable
 from skala_podatkowa import TaxPeriod
+
+SAVE_FILENAME = 'podatek_dane.txt'
 
 
 class FormField:
@@ -27,6 +30,9 @@ class FormField:
     def get_input(self) -> 'str':
         return self._entry.get()
 
+    def set_text(self, text_to_set: 'str'):
+        self._entry_text.set(text_to_set)
+
     def attach_write_callback(self, callback: 'Callable'):
         self._entry_text.trace('w', callback)
 
@@ -45,9 +51,6 @@ class OutputFormField(FormField):
     def __init__(self, label_text: 'str', parent: 'tk.Frame', options: 'GUIOptions'):
         super().__init__(label_text, parent, options)
         self._entry.config(state='readonly')
-
-    def set_text(self, text_to_set: 'str'):
-        self._entry_text.set(text_to_set)
 
 
 class GUIOptions:
@@ -111,6 +114,19 @@ def convert_input(input_value: 'str') -> 'dec.Decimal':
     return decimal
 
 
+def save_inputs(inputs_dict):
+    # TODO error handling
+    with open(SAVE_FILENAME, 'w') as file:
+        json.dump(inputs_dict, file)
+
+
+def load_inputs() -> 'Dict[str,str]':
+    # TODO error handling
+    with open(SAVE_FILENAME, 'r') as file:
+        inputs_dict = json.load(file)
+    return inputs_dict
+
+
 class KalkulatorGUI:
     INPUT_NAMES = [
         'revenue',
@@ -125,14 +141,6 @@ class KalkulatorGUI:
         'Odliczenia od podatku',
         'Odliczenia od dochodu',
         'Zapłacone zaliczki'
-    ]
-
-    DEFAULT_INPUT_VALUES = [
-        '11300,00',
-        '1153,73',
-        '918,82',
-        '652,41',
-        '0,00'
     ]
 
     INPUTS_HEADER = 'Do wprowadzenia'
@@ -169,13 +177,12 @@ class KalkulatorGUI:
 
     def __init__(self):
         def create_inputs(parent):
-            for input_name, label_text, starting_value in zip(
+            for input_name, label_text in zip(
                     KalkulatorGUI.INPUT_NAMES,
-                    KalkulatorGUI.INPUT_LABELS,
-                    KalkulatorGUI.DEFAULT_INPUT_VALUES
+                    KalkulatorGUI.INPUT_LABELS
             ):
                 self._inputs[input_name] = FormField(
-                    label_text, parent, self._options, starting_value)
+                    label_text, parent, self._options)
 
         def create_outputs(parent):
             for output_name, output_label in zip(
@@ -201,7 +208,6 @@ class KalkulatorGUI:
         self._outputs = {}
         self._tax_period = TaxPeriod()
         self._options = GUIOptions()
-
 
         create_notebook(parent=self._root)
         create_tabs(parent=self._notebook)
@@ -239,6 +245,7 @@ class KalkulatorGUI:
     def _assign_callbacks(self):
         for input_field in self._all_inputs():
             input_field.attach_write_callback(self._update_callback)
+        self._root.protocol("WM_DELETE_WINDOW", self._on_closing)
 
     def _update_callback(self, *_):
         self._update_tax_period_from_inputs()
@@ -302,10 +309,30 @@ class KalkulatorGUI:
             _all_inputs.append(self._inputs[input_name])
         return _all_inputs
 
+    def _load_inputs(self):
+        try:
+            inputs_dict = load_inputs()
+            for input_name, value in inputs_dict.items():
+                self._inputs[input_name].set_text(value)
+        except json.decoder.JSONDecodeError:
+            pass
+
+    def _save_inputs(self):
+        inputs_dict = {}
+        for input_name, value in self._inputs.items():
+            inputs_dict[input_name] = value.get_input()
+        save_inputs(inputs_dict)
+
+    def _on_closing(self):
+        # TODO error handling
+        self._save_inputs()
+        self._root.destroy()
+
     def main_loop(self):
         self._arrange_form()
         self._assign_callbacks()
         self._update_callback()
+        self._load_inputs()
         self._root.mainloop()
 
 
