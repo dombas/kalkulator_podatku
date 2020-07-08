@@ -12,9 +12,9 @@ from skala_podatkowa import TaxPeriod
 
 class FormField:
     def __init__(self, label_text: 'str', parent: 'tk.Frame', options: 'GUIOptions', starting_value: 'str' = ''):
-        self._label = tk.Label(parent, text=label_text)
+        self._label = tk.Label(parent, text=label_text, font=options.default_font())
         self._entry_text = tk.StringVar(value=starting_value)
-        self._entry = tk.Entry(parent, textvariable=self._entry_text)
+        self._entry = tk.Entry(parent, textvariable=self._entry_text, font=options.default_font())
         self._default_background = self._entry.cget('background')
         self._options = options
 
@@ -29,12 +29,6 @@ class FormField:
 
     def attach_write_callback(self, callback: 'Callable'):
         self._entry_text.trace('w', callback)
-
-    def apply_options(self, gui_options: 'GUIOptions' = None):
-        if gui_options:
-            self._options = gui_options
-        self._entry.config(font=self._options.default_font())
-        self._label.config(font=self._options.default_font())
 
     def grid(self, row: 'int'):
         self._label.grid(column=0, row=row)
@@ -59,18 +53,26 @@ class OutputFormField(FormField):
 class GUIOptions:
     def __init__(self):
         self.font_size = 14
-        self.header_font_size = 20
-        self.tab_font_size = 20
+        self.header_font_size = 16
+        self.tab_font_size = 19
         self.error_background = 'salmon'
 
+        self._default_font = tk_font.Font(size=self.font_size)
+        self._header_font = tk_font.Font(family='Helvetica', size=self.header_font_size)
+        self._tab_font = tk_font.Font(family='Helvetica', size=self.tab_font_size)
+
+        self._style = ttk.Style()
+        self._style.configure('TLabelframe.Label', font=self.header_font(), foreground='gray')
+        self._style.configure('TNotebook.Tab', font=self.tab_font())
+
     def default_font(self) -> 'tk_font.Font':
-        return tk_font.Font(size=self.font_size)
+        return self._default_font
 
     def header_font(self) -> 'tk_font.Font':
-        return tk_font.Font(family='Times', size=self.header_font_size)
+        return self._header_font
 
     def tab_font(self) -> 'tk_font.Font':
-        return tk_font.Font(family='Helvetica', size=self.tab_font_size, weight='bold')
+        return self._tab_font
 
 
 def strip_non_numeric(input_str: 'str') -> 'str':
@@ -200,6 +202,7 @@ class KalkulatorGUI:
         self._tax_period = TaxPeriod()
         self._options = GUIOptions()
 
+
         create_notebook(parent=self._root)
         create_tabs(parent=self._notebook)
         create_frames(parent=self._main_tab)
@@ -299,17 +302,9 @@ class KalkulatorGUI:
             _all_inputs.append(self._inputs[input_name])
         return _all_inputs
 
-    def _apply_options(self):
-        for form_field in self._all_form_fields():
-            form_field.apply_options(self._options)
-        style = ttk.Style()
-        style.configure('TLabelframe.Label', font=self._options.header_font())
-        style.configure('TNotebook.Tab', font=self._options.tab_font())
-
     def main_loop(self):
         self._arrange_form()
         self._assign_callbacks()
-        self._apply_options()
         self._update_callback()
         self._root.mainloop()
 
